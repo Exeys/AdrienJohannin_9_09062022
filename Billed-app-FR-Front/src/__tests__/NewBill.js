@@ -59,4 +59,9 @@ describe("Given I am connected as an employee", () => {
       })
     })
   })
+  describe("When I submit a valid bill", () => {
+    test("Then, a new bill should be created", async () => {
+
+    })
+  })
 })
