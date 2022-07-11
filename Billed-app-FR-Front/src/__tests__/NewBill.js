@@ -4,6 +4,7 @@
 
 import { fireEvent, screen, waitFor } from "@testing-library/dom"
 import NewBillUI from "../views/NewBillUI.js"
+import BillsUI from "../views/BillsUI.js"
 import NewBill from "../containers/NewBill.js"
 import { localStorageMock } from "../__mocks__/localStorage.js"
 import { ROUTES_PATH } from "../constants/routes"
@@ -76,8 +77,14 @@ describe("Given I am connected as an employee", () => {
       const html = NewBillUI()
       document.body.innerHTML = html
 
+      jest.spyOn(mockStore, "bills")
+
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
+
       const newBill = new NewBill({
-        document, onNavigate, store: null, localStorage: window.localStorage
+        document, onNavigate, store: mockStore, localStorage: window.localStorage
       })
 
       // Je crée ma note de frais
@@ -116,9 +123,44 @@ describe("Given I am connected as an employee", () => {
       fireEvent.submit(formNewBill);
 
       expect(handleSubmitForm).toHaveBeenCalled();
-
+      expect(mockStore.bills).toHaveBeenCalled();
       //test 404, 500
 
     })
+    test("Then, it occurs a 404 error", async () => {
+
+      jest.spyOn(mockStore, "bills")
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: () => {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }
+      })
+
+      const html = BillsUI({ error: "Erreur 404" })
+      document.body.innerHTML = html
+      const message = await screen.getByText(/Erreur 404/)
+      expect(message).toBeTruthy()
+    })
+    test("Then, it occurs a 500 error", async () => {
+
+      jest.spyOn(mockStore, "bills")
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: () => {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }
+      })
+
+      const html = BillsUI({ error: "Erreur 500" })
+      document.body.innerHTML = html
+      const message = await screen.getByText(/Erreur 50/)
+      expect(message).toBeTruthy()
+    })
+
   })
 })
